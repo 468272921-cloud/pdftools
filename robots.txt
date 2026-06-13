@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://468272921-cloud.github.io/pdftools/sitemap.xml
+Sitemap: https://pdftools-app.github.io/pdftools/sitemap.xml
