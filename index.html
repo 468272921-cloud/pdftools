@@ -13,9 +13,8 @@
   <meta property="og:url" content="https://pdftools-app.github.io/pdftools">
   <title>PDF在线合并 - 免费 · 安全 · 无需上传 | PDFTools</title>
 
-  <!-- pdf-lib + pdf.js -->
+  <!-- pdf-lib -->
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script src="https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.min.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -310,27 +309,6 @@
     .limit-notice.show { display: block; }
     .limit-notice a { color: #856404; font-weight: 700; }
 
-    /* ====== Preview ====== */
-    .preview-area {
-      background: white; border-radius: 12px; border: 1px solid #e2e8f0;
-      padding: 16px 20px; margin-bottom: 20px;
-    }
-    .preview-card {
-      flex-shrink: 0; width: 150px; text-align: center;
-      background: #f8fafc; border-radius: 8px; padding: 8px;
-      border: 1px solid #e2e8f0;
-    }
-    .preview-card canvas {
-      width: 134px; height: 100px; object-fit: contain;
-      border-radius: 4px; margin-bottom: 6px;
-    }
-    .preview-card .pname {
-      font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .preview-card .pidx {
-      font-size: 10px; color: #94a3b8; margin-top: 2px;
-    }
-
     /* ====== Footer ====== */
     .footer {
       text-align: center;
@@ -439,17 +417,7 @@
     <!-- 操作按钮 -->
     <div class="action-bar" id="actionBar" style="display:none">
       <button class="btn btn-merge" id="mergeBtn">🔗 开始合并</button>
-      <button class="btn btn-secondary" id="previewBtn">👁 预览</button>
       <button class="btn btn-clear" id="clearBtn">清空列表</button>
-    </div>
-
-    <!-- 预览区域 -->
-    <div class="preview-area" id="previewArea" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <span style="font-size:14px;font-weight:700">📖 合并预览（每份PDF首页）</span>
-        <button class="btn-sm" id="closePreview" style="border:1px solid #e2e8f0;background:white;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:12px">关闭</button>
-      </div>
-      <div id="previewGrid" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:12px"></div>
     </div>
 
     <!-- 进度条 -->

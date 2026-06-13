@@ -1,12 +1,7 @@
 /**
  * PDF 合并工具 — 纯客户端，无后端
- * 依赖：pdf-lib、pdf.js (CDN)
+ * 依赖：pdf-lib (CDN)
  */
-
-// pdf.js worker 提前初始化
-if (typeof pdfjsLib !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.worker.min.js';
-}
 
 // ============ 配置 ============
 const FREE_LIMIT_FILES = 5;
@@ -238,24 +233,18 @@ function removeFile(idx) {
   renderFileList();
 }
 
-function refreshPreviewIfVisible() {
-  if (document.getElementById('previewArea').style.display === 'block') {
-    showPreview();
-  }
-}
-
 function moveUp(idx) {
   if (idx <= 0) return;
   [STATE.files[idx - 1], STATE.files[idx]] = [STATE.files[idx], STATE.files[idx - 1]];
   renderFileList();
-  refreshPreviewIfVisible();
+  
 }
 
 function moveDown(idx) {
   if (idx >= STATE.files.length - 1) return;
   [STATE.files[idx], STATE.files[idx + 1]] = [STATE.files[idx + 1], STATE.files[idx]];
   renderFileList();
-  refreshPreviewIfVisible();
+  
 }
 
 function clearFiles() {
@@ -408,7 +397,7 @@ function setupDragSort() {
       STATE.files.splice(targetIdx, 0, moved);
       STATE.dragIdx = targetIdx;
       renderFileList();
-      refreshPreviewIfVisible();
+      
     }
   });
 }
@@ -453,46 +442,6 @@ function setupDropzone() {
   });
 }
 
-// ============ 预览 ============
-function showPreview() {
-  if (STATE.files.length === 0) return;
-  const area = document.getElementById('previewArea');
-  const grid = document.getElementById('previewGrid');
-  area.style.display = 'block';
-
-  const totalPages = STATE.files.reduce((sum, f) => sum + (f.pages || 0), 0);
-
-  // 先渲染占位，再逐个替换为 base64 object
-  grid.innerHTML = ''
-    + '<div style="width:100%;text-align:center;margin-bottom:14px;font-size:13px;color:#64748b">'
-    + '合并顺序确认 · 共 ' + STATE.files.length + ' 个文件 · 预计 ' + totalPages + ' 页'
-    + '</div>'
-    + '<div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;justify-content:center;flex-wrap:wrap">'
-    + STATE.files.map((f, i) => {
-        const sizeStr = f.size > 1024 * 1024
-          ? (f.size / 1024 / 1024).toFixed(1) + ' MB'
-          : (f.size / 1024).toFixed(0) + ' KB';
-        // 转 base64
-        const bytes = new Uint8Array(f.pdfBytes);
-        let binary = '';
-        for (let j = 0; j < bytes.length; j++) {
-          binary += String.fromCharCode(bytes[j]);
-        }
-        const b64 = btoa(binary);
-        return ''
-          + '<div class="preview-card" id="pcard-' + i + '" style="flex-shrink:0;width:160px;text-align:center">'
-          + '<object data="data:application/pdf;base64,' + b64 + '#page=1&view=fitH" type="application/pdf" style="width:160px;height:200px;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:6px"></object>'
-          + '<div class="pname" style="font-size:12px" title="' + escapeHtml(f.name) + '">' + escapeHtml(f.name) + '</div>'
-          + '<div style="font-size:11px;color:#94a3b8;margin-top:2px">第 ' + (i + 1) + ' 位 · ' + (f.pages || '?') + ' 页 · ' + sizeStr + '</div>'
-          + '</div>';
-      }).join('')
-    + '</div>';
-}
-
-function hidePreview() {
-  document.getElementById('previewArea').style.display = 'none';
-}
-
 // ============ 事件绑定 ============
 function setupEvents() {
   document.getElementById('mergeBtn').addEventListener('click', mergePDFs);
@@ -504,8 +453,6 @@ function setupEvents() {
     }, 1000);
   });
   document.getElementById('resetBtn').addEventListener('click', clearFiles);
-  document.getElementById('previewBtn').addEventListener('click', showPreview);
-  document.getElementById('closePreview').addEventListener('click', hidePreview);
 
   document.getElementById('upgradeBtn').addEventListener('click', (e) => {
     e.preventDefault();
