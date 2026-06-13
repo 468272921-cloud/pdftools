@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="免费在线图片压缩工具，支持JPG/PNG/WebP格式。纯浏览器本地处理，文件不上传服务器，保护隐私。批量压缩，可自定义质量。">
+  <meta name="keywords" content="图片压缩,在线图片压缩,免费图片压缩,JPG压缩,PNG压缩,批量图片压缩">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://pdftools-online.netlify.app/compress-image">
+  <meta property="og:title" content="图片在线压缩 - 免费工具">
+  <meta property="og:description" content="免费在线图片压缩，纯浏览器本地处理，可批量。">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <title>图片在线压缩 - 免费 · 批量 · 安全 | PDFTools</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Roboto, sans-serif;
+      background: #f8fafc; color: #334155; min-height: 100vh;
+    }
+    .header {
+      background: white; border-bottom: 1px solid #e2e8f0;
+      padding: 14px 24px; display: flex; justify-content: space-between;
+      align-items: center; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; gap: 8px;
+    }
+    .logo { font-size: 20px; font-weight: 800; color: #0f172a; text-decoration: none; }
+    .logo .icon { font-size: 26px; }
+    .nav { display: flex; gap: 4px; flex-wrap: wrap; }
+    .nav a {
+      padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;
+      text-decoration: none; color: #64748b; transition: all 0.15s;
+    }
+    .nav a:hover { background: #f1f5f9; }
+    .nav a.active { background: #667eea; color: white; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .badge { font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+    .badge-pro { background: #d4edda; color: #155724; }
+    .badge-free { background: #fff3cd; color: #856404; }
+    .btn-upgrade {
+      padding: 7px 16px; background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white; border: none; border-radius: 20px; font-size: 12px;
+      font-weight: 600; cursor: pointer; text-decoration: none;
+    }
+    .main { max-width: 720px; margin: 0 auto; padding: 32px 20px 60px; }
+    h1 { font-size: 28px; font-weight: 800; text-align: center; margin-bottom: 8px; color: #0f172a; }
+    .subtitle { text-align: center; font-size: 14px; color: #64748b; margin-bottom: 28px; }
+    .privacy-note { display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: 12px; color: #10b981; font-weight: 600; margin-bottom: 24px; }
+
+    .dropzone {
+      border: 2px dashed #cbd5e1; border-radius: 12px; padding: 48px 24px;
+      text-align: center; cursor: pointer; transition: all 0.2s; background: white; margin-bottom: 20px;
+    }
+    .dropzone:hover, .dropzone.drag-over { border-color: #667eea; background: #f0f2ff; }
+    .dropzone .dz-icon { font-size: 48px; margin-bottom: 12px; }
+    .dropzone .dz-text { font-size: 16px; font-weight: 600; }
+    .dropzone .dz-hint { font-size: 13px; color: #94a3b8; margin-top: 6px; }
+
+    .controls {
+      background: white; border-radius: 12px; border: 1px solid #e2e8f0;
+      padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 16px;
+      align-items: center; flex-wrap: wrap;
+    }
+    .controls label { font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap; }
+    .controls input[type=range] { flex: 1; min-width: 120px; }
+    .controls .quality-val { font-size: 14px; font-weight: 700; color: #667eea; min-width: 30px; }
+    .controls select {
+      padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;
+    }
+
+    .file-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px; margin-bottom: 20px;
+    }
+    .file-card {
+      background: white; border: 1px solid #e2e8f0; border-radius: 10px;
+      padding: 12px; text-align: center; position: relative;
+    }
+    .file-card .preview {
+      width: 100%; height: 100px; object-fit: cover; border-radius: 6px;
+      background: #f1f5f9; margin-bottom: 8px;
+    }
+    .file-card .fname {
+      font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 4px; font-weight: 500;
+    }
+    .file-card .finfo { font-size: 11px; color: #94a3b8; }
+    .file-card .finfo .saved { color: #10b981; font-weight: 700; }
+    .file-card .remove-btn {
+      position: absolute; top: 6px; right: 6px;
+      width: 22px; height: 22px; background: #e74c3c; color: white;
+      border: none; border-radius: 50%; cursor: pointer; font-size: 12px;
+      line-height: 1; opacity: 0; transition: opacity 0.15s;
+    }
+    .file-card:hover .remove-btn { opacity: 1; }
+
+    .action-bar { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+    .btn {
+      padding: 12px 28px; border: none; border-radius: 8px; font-size: 14px;
+      font-weight: 700; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: #667eea; color: white; box-shadow: 0 4px 14px rgba(102,126,234,0.3); }
+    .btn-primary:hover { transform: translateY(-1px); }
+    .btn-primary:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; transform: none; }
+    .btn-secondary { background: white; color: #64748b; border: 1px solid #e2e8f0; }
+    .btn-download {
+      display: inline-block; padding: 12px 36px; background: #10b981; color: white;
+      border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 700;
+    }
+
+    .limit-notice {
+      display: none; background: #fff3cd; color: #856404;
+      border: 1px solid #ffc107; border-radius: 8px; padding: 14px;
+      text-align: center; font-size: 14px; margin-bottom: 16px;
+    }
+    .limit-notice.show { display: block; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 200; align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white; border-radius: 16px; padding: 32px; max-width: 400px;
+      width: 90%; text-align: center;
+    }
+    .modal h3 { font-size: 20px; margin-bottom: 8px; }
+    .modal p { font-size: 13px; color: #64748b; margin-bottom: 12px; }
+    .modal input {
+      width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 14px; font-family: monospace; text-align: center; margin-bottom: 12px;
+    }
+    .modal .btn-row { display: flex; gap: 8px; }
+    .modal .btn-row .btn { flex: 1; font-size: 14px; padding: 10px; }
+    .modal .btn-outline { background: white; color: #64748b; border: 1px solid #e2e8f0; }
+    .modal-msg { font-size: 12px; margin-bottom: 12px; display: none; }
+
+    .footer { text-align: center; padding: 24px; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; margin-top: 40px; }
+
+    .progress-wrap { display: none; text-align: center; padding: 20px; }
+    .progress-wrap.show { display: block; }
+    .progress-text { font-size: 13px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="/" class="logo"><span class="icon">📄</span> PDFTools</a>
+    <div class="nav">
+      <a href="index.html">PDF合并</a>
+      <a href="compress-image.html" class="active">图片压缩</a>
+      <a href="convert-image.html">格式转换</a>
+      <a href="compress-pdf.html">PDF压缩</a>
+    </div>
+    <div class="header-right">
+      <span class="badge badge-free" id="tierBadge">免费版</span><span class="usage-hint" id="usageHint" style="font-size:11px;color:#64748b;margin-left:4px"></span>
+      <a class="btn-upgrade" id="upgradeBtn" href="#">👑 升级专业版</a>
+    </div>
+  </div>
+
+  <div class="main">
+    <h1>图片压缩工具</h1>
+    <p class="subtitle">压缩 JPG/PNG/WebP 图片，自定义质量，批量处理</p>
+    <div class="privacy-note">🔒 所有处理均在浏览器本地完成，文件不上传服务器</div>
+
+    <div class="limit-notice" id="limitNotice">
+      ⚠️ 免费版最多 <strong>10 张图片</strong>。<a href="#" id="limitUpgradeLink">升级专业版</a> 解锁无限
+    </div>
+
+    <div class="dropzone" id="dropzone">
+      <div class="dz-icon">🖼️</div>
+      <div class="dz-text">拖拽图片到此处</div>
+      <div class="dz-hint">支持 JPG / PNG / WebP — 可批量选择</div>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
+
+    <div class="controls" id="controls" style="display:none">
+      <label>压缩质量</label>
+      <input type="range" id="qualitySlider" min="10" max="100" value="75" step="5">
+      <span class="quality-val" id="qualityVal">75%</span>
+      <label>输出格式</label>
+      <select id="outputFormat">
+        <option value="auto">保持原格式</option>
+        <option value="image/jpeg">JPG</option>
+        <option value="image/png">PNG</option>
+        <option value="image/webp">WebP</option>
+      </select>
+    </div>
+
+    <!-- 实时预览 -->
+    <div class="preview-info" id="previewInfo" style="display:none; background:white; border-radius:12px; border:1px solid #e2e8f0; padding:14px 20px; margin-bottom:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <div>
+          <span style="font-size:12px;color:#94a3b8;">原图大小</span>
+          <span style="font-size:16px;font-weight:700;margin-left:6px" id="previewOrig">-</span>
+        </div>
+        <span style="font-size:18px;color:#94a3b8;">→</span>
+        <div>
+          <span style="font-size:12px;color:#94a3b8;">压缩后预估</span>
+          <span style="font-size:16px;font-weight:700;color:#10b981;margin-left:6px" id="previewComp">-</span>
+        </div>
+        <div>
+          <span style="font-size:12px;color:#94a3b8;">节省</span>
+          <span style="font-size:16px;font-weight:700;color:#667eea;margin-left:6px" id="previewSave">-</span>
+        </div>
+        <span style="font-size:11px;color:#94a3b8">基于第一张图片实时预览</span>
+      </div>
+    </div>
+
+    <div class="file-grid" id="fileGrid"></div>
+
+    <div class="action-bar" id="actionBar" style="display:none">
+      <button class="btn btn-primary" id="compressBtn">🗜️ 全部压缩</button>
+      <button class="btn btn-secondary" id="downloadAllBtn">📥 打包下载 ZIP</button>
+      <button class="btn btn-secondary" id="clearBtn">清空</button>
+    </div>
+
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-text" id="progressText">正在压缩...</div>
+    </div>
+  </div>
+
+  <!-- License Modal -->
+  <div class="modal-overlay" id="licenseModal">
+    <div class="modal">
+      <h3>🔑 激活专业版</h3>
+      <p>1. 去<b>爱发电</b>赞助 ¥9.9<br>2. 获取 License Key<br>3. 在下方输入激活</p>
+      <input type="text" id="licenseInput" placeholder="PDF-XXXX-XXXX-XXXX">
+      <div class="modal-msg" id="modalMsg"></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" id="modalClose">取消</button>
+        <button class="btn btn-primary" id="modalActivate">激活</button>
+      </div>
+      <a class="btn btn-primary" id="buyLink" href="#" target="_blank" style="display:block;margin-top:12px;text-decoration:none;font-size:14px;">
+        💰 去爱发电赞助 ¥9.9
+      </a>
+    </div>
+  </div>
+
+  <div class="footer">PDFTools © 2026 · 所有文件处理均在浏览器本地完成</div>
+
+  <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script>
+    // ====== 共用 License 系统（与 index.html 共享 localStorage） ======
+    const AFDIAN_URL = 'https://ifdian.net/a/thd4682';
+    const SALT = 'pdftools2026';
+    const FREE_LIMIT_IMAGES = 10;
+
+    function djb2Hash(s) {
+      let h = 5381;
+      for (let i = 0; i < s.length; i++) h = ((h * 33) + s.charCodeAt(i)) >>> 0;
+      return h >>> 0;
+    }
+
+    function hashToChecksum(h) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let r = '';
+      for (let i = 0; i < 4; i++) { r += chars[h % chars.length]; h = Math.floor(h / chars.length); }
+      return r;
+    }
+
+    function validateKey(key) {
+      const m = key.trim().toUpperCase().match(/^PDF-([A-Z0-9]{4})-([A-Z0-9]{4})-([A-Z0-9]{4})$/);
+      if (!m) return false;
+      return m[3] === hashToChecksum(djb2Hash(m[1] + m[2] + SALT));
+    }
+
+    function isPremium() {
+      try {
+        const d = JSON.parse(localStorage.getItem('pdf-tools-state') || '{}');
+        if (!(d.license && d.license.valid)) return false; if (!d.license.expiresAt) return true; return Date.now() < d.license.expiresAt;
+      } catch (_) { return false; }
+    }
+
+    function showLicenseModal() {
+      document.getElementById('buyLink').href = AFDIAN_URL;
+      document.getElementById('licenseModal').classList.add('show');
+      document.getElementById('modalMsg').style.display = 'none';
+      document.getElementById('licenseInput').value = '';
+    }
+
+    function hideLicenseModal() {
+      document.getElementById('licenseModal').classList.remove('show');
+    }
+
+    function activateLicense() {
+      const input = document.getElementById('licenseInput').value.trim();
+      const msg = document.getElementById('modalMsg');
+      if (!input) { msg.style.display = 'block'; msg.style.color = '#e74c3c'; msg.textContent = '请输入 License Key'; return; }
+      if (!validateKey(input)) { msg.style.display = 'block'; msg.style.color = '#e74c3c'; msg.textContent = '无效的 License Key'; return; }
+      try {
+        const d = JSON.parse(localStorage.getItem('pdf-tools-state') || '{}');
+        d.license = { key: input, valid: true, expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 };
+        localStorage.setItem('pdf-tools-state', JSON.stringify(d));
+      } catch (_) {}
+      refreshUI();
+      hideLicenseModal();
+    }
+
+    function refreshUI() {
+      const prem = isPremium();
+      const b = document.getElementById('tierBadge');
+      const u = document.getElementById('upgradeBtn');
+      const h = document.getElementById('usageHint');
+      if (prem) { b.textContent = '专业版 👑'; b.className = 'badge badge-pro'; u.style.display = 'none'; if (h) { try { const s = JSON.parse(localStorage.getItem('pdf-tools-state') || '{}'); if (s.license && s.license.expiresAt) h.textContent = '剩余 ' + Math.max(0, Math.ceil((s.license.expiresAt - Date.now()) / 86400000)) + ' 天'; } catch(_) {} } }
+      else { b.textContent = '免费版'; b.className = 'badge badge-free'; u.style.display = ''; if (h) h.textContent = `剩余 ${FREE_LIMIT_IMAGES - files.length} 张`; }
+      const n = document.getElementById('limitNotice');
+      if (!prem && files.length >= FREE_LIMIT_IMAGES) n.classList.add('show'); else n.classList.remove('show');
+    }
+
+    // ====== 图片处理 ======
+    const files = [];
+
+    function addFiles(fileList) {
+      const imgs = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+      for (const f of imgs) {
+        if (files.length >= FREE_LIMIT_IMAGES && !isPremium()) {
+          document.getElementById('limitNotice').classList.add('show');
+          break;
+        }
+        if (files.some(x => x.name === f.name && x.size === f.size)) continue;
+        f._id = Date.now() + Math.random();
+        files.push(f);
+      }
+      renderGrid();
+    }
+
+    function removeFile(idx) { files.splice(idx, 1); renderGrid(); }
+
+    function renderGrid() {
+      const grid = document.getElementById('fileGrid');
+      const actionBar = document.getElementById('actionBar');
+      const controls = document.getElementById('controls');
+      const dz = document.getElementById('dropzone');
+
+      if (files.length === 0) {
+        grid.innerHTML = ''; actionBar.style.display = 'none'; controls.style.display = 'none'; dz.style.display = '';
+      } else {
+        dz.style.display = 'none'; controls.style.display = 'flex'; actionBar.style.display = 'flex';
+        grid.innerHTML = files.map((f, i) => `
+          <div class="file-card">
+            <button class="remove-btn" onclick="removeFile(${i})">✕</button>
+            <img class="preview" src="${URL.createObjectURL(f)}" alt="${f.name}">
+            <div class="fname" title="${f.name}">${f.name}</div>
+            <div class="finfo">${(f.size/1024).toFixed(0)} KB</div>
+          </div>`).join('');
+        }
+        refreshUI();
+        livePreview();
+      }
+
+      let livePreviewTimer;
+      async function livePreview() {
+      clearTimeout(livePreviewTimer);
+      livePreviewTimer = setTimeout(async () => {
+        const info = document.getElementById('previewInfo');
+        if (files.length === 0) { info.style.display = 'none'; return; }
+        info.style.display = 'block';
+
+        const f = files[0];
+        document.getElementById('previewOrig').textContent = (f.size / 1024).toFixed(1) + ' KB';
+
+        try {
+          const quality = parseInt(document.getElementById('qualitySlider').value) / 100;
+          let outFmt = document.getElementById('outputFormat').value;
+          const bmp = await createImageBitmap(f);
+          const canvas = document.createElement('canvas');
+          canvas.width = bmp.width; canvas.height = bmp.height;
+          canvas.getContext('2d').drawImage(bmp, 0, 0);
+
+          let mime = outFmt;
+          if (mime === 'auto') mime = f.type || 'image/jpeg';
+
+          const blob = await new Promise(r => canvas.toBlob(r, mime, quality));
+          document.getElementById('previewComp').textContent = (blob.size / 1024).toFixed(1) + ' KB';
+
+          const pct = Math.round((1 - blob.size / f.size) * 100);
+          const el = document.getElementById('previewSave');
+          el.textContent = pct + '%';
+          el.style.color = pct > 0 ? '#10b981' : '#ef4444';
+        } catch (_) {}
+      }, 200);
+    }
+
+    async function compressAll() {
+      const quality = parseInt(document.getElementById('qualitySlider').value) / 100;
+      const outFmt = document.getElementById('outputFormat').value;
+      const progress = document.getElementById('progressWrap');
+      const text = document.getElementById('progressText');
+
+      progress.classList.add('show');
+
+      for (let i = 0; i < files.length; i++) {
+        text.textContent = `正在压缩 ${i + 1}/${files.length}: ${files[i].name}`;
+        await sleep(50);
+
+        try {
+          const bmp = await createImageBitmap(files[i]);
+          const canvas = document.createElement('canvas');
+          canvas.width = bmp.width; canvas.height = bmp.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(bmp, 0, 0);
+
+          let mime = outFmt;
+          if (mime === 'auto') mime = files[i].type || 'image/jpeg';
+          if (mime === 'image/png') mime = 'image/png'; // PNG忽略quality
+
+          const blob = await new Promise(r => canvas.toBlob(r, mime, quality));
+          const url = URL.createObjectURL(blob);
+
+          // 替换文件数据
+          const previewImg = document.querySelectorAll('.file-card')[i]?.querySelector('img');
+          if (previewImg) {
+            previewImg.src = url;
+            const infoEl = document.querySelectorAll('.file-card')[i]?.querySelector('.finfo');
+            if (infoEl) {
+              const saved = files[i].size - blob.size;
+              const pct = Math.round((1 - blob.size / files[i].size) * 100);
+              infoEl.innerHTML = `${(files[i].size/1024).toFixed(0)} KB → <span class="saved">${(blob.size/1024).toFixed(0)} KB (-${pct}%)</span>`;
+            }
+          }
+          // 存储压缩结果
+          files[i]._compressed = blob;
+          files[i]._compressedUrl = url;
+        } catch (err) {
+          console.error('Compress error:', files[i].name, err);
+        }
+      }
+
+      text.textContent = `压缩完成！共处理 ${files.length} 张图片`;
+      setTimeout(() => progress.classList.remove('show'), 2000);
+    }
+
+    async function downloadAllZip() {
+      if (!window.JSZip) { alert('JSZip 加载失败，请刷新后重试'); return; }
+      const zip = new JSZip();
+      let count = 0;
+      for (const f of files) {
+        if (f._compressed) {
+          zip.file(f.name, f._compressed);
+          count++;
+        }
+      }
+      if (count === 0) { alert('请先压缩图片'); return; }
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'compressed-images.zip'; a.click();
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    // ====== 初始化 ======
+    function init() {
+      refreshUI();
+
+      const dz = document.getElementById('dropzone');
+      const fi = document.getElementById('fileInput');
+      dz.addEventListener('click', () => fi.click());
+      fi.addEventListener('change', e => { addFiles(e.target.files); fi.value = ''; });
+      ['dragover','dragleave','drop'].forEach(ev => {
+        dz.addEventListener(ev, e => { e.preventDefault(); if (ev === 'dragover') dz.classList.add('drag-over'); else dz.classList.remove('drag-over'); });
+      });
+      dz.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+      // 全局拖放
+      document.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+      document.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); if (!dz.contains(e.target)) addFiles(e.dataTransfer.files); });
+
+      document.getElementById('compressBtn').addEventListener('click', compressAll);
+      document.getElementById('downloadAllBtn').addEventListener('click', downloadAllZip);
+      document.getElementById('clearBtn').addEventListener('click', () => { files.length = 0; renderGrid(); });
+      document.getElementById('qualitySlider').addEventListener('input', function() {
+        document.getElementById('qualityVal').textContent = this.value + '%';
+        livePreview();
+      });
+      document.getElementById('outputFormat').addEventListener('change', livePreview);
+      document.getElementById('upgradeBtn').addEventListener('click', e => { e.preventDefault(); showLicenseModal(); });
+      document.getElementById('limitUpgradeLink').addEventListener('click', e => { e.preventDefault(); showLicenseModal(); });
+      document.getElementById('modalClose').addEventListener('click', hideLicenseModal);
+      document.getElementById('modalActivate').addEventListener('click', activateLicense);
+      document.getElementById('licenseInput').addEventListener('keydown', e => { if (e.key === 'Enter') activateLicense(); });
+      document.getElementById('licenseModal').addEventListener('click', e => { if (e.target === e.currentTarget) hideLicenseModal(); });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

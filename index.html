@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="免费在线PDF合并工具，多个PDF文件合并为一个。纯浏览器本地处理，文件不上传服务器，极速安全。支持拖拽排序、批量合并。">
+  <meta name="keywords" content="PDF合并,PDF合并工具,在线PDF合并,免费PDF合并,多个PDF合并,PDF拼接">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://pdftools-online.netlify.app">
+  <meta property="og:title" content="PDF合并 - 免费在线工具">
+  <meta property="og:description" content="免费在线PDF合并，文件不上传服务器，纯浏览器本地处理。">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://pdftools-online.netlify.app">
+  <title>PDF在线合并 - 免费 · 安全 · 无需上传 | PDFTools</title>
+
+  <!-- pdf-lib + pdf.js -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.min.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Roboto, sans-serif;
+      background: #f8fafc;
+      color: #334155;
+      min-height: 100vh;
+    }
+
+    /* ====== Header ====== */
+    .header {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo .icon { font-size: 26px; }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .badge {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .badge-pro { background: #d4edda; color: #155724; }
+    .badge-free { background: #fff3cd; color: #856404; }
+    .header { flex-wrap: wrap; gap: 8px; }
+    .nav { display: flex; gap: 4px; flex-wrap: wrap; }
+    .nav a {
+      padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;
+      text-decoration: none; color: #64748b; transition: all 0.15s;
+    }
+    .nav a:hover { background: #f1f5f9; }
+    .nav a.active { background: #667eea; color: white; }
+    .btn-upgrade {
+      padding: 8px 18px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-upgrade:hover { opacity: 0.9; }
+
+    /* ====== Main ====== */
+    .main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 8px;
+      color: #0f172a;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #64748b;
+      margin-bottom: 28px;
+    }
+    .privacy-note {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #10b981;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    /* ====== Drop Zone ====== */
+    .dropzone {
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: white;
+      margin-bottom: 20px;
+    }
+    .dropzone:hover, .dropzone.drag-over {
+      border-color: #667eea;
+      background: #f0f2ff;
+    }
+    .dropzone .dz-icon { font-size: 48px; margin-bottom: 12px; }
+    .dropzone .dz-text { font-size: 16px; font-weight: 600; color: #334155; }
+    .dropzone .dz-hint { font-size: 13px; color: #94a3b8; margin-top: 6px; }
+
+    /* ====== File List ====== */
+    .file-list {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .file-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 14px;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f8fafc;
+      transition: background 0.15s;
+    }
+    .file-item:last-child { border-bottom: none; }
+    .file-item:hover { background: #f8fafc; }
+    .file-item .idx {
+      width: 28px; height: 28px;
+      background: #f1f5f9;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      flex-shrink: 0;
+    }
+    .file-item .finfo { flex: 1; min-width: 0; }
+    .file-item .fname {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .file-item .fsize {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    .file-item .fpages {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-left: 8px;
+    }
+    .file-item .btns {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .btn-sm {
+      padding: 5px 10px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.15s;
+    }
+    .btn-sm:hover { background: #f1f5f9; }
+    .btn-sm.move:hover { background: #e8ecff; }
+    .btn-sm.del { color: #e74c3c; }
+    .btn-sm.del:hover { background: #ffeaea; border-color: #e74c3c; }
+
+    /* ====== Action Bar ====== */
+    .action-bar {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 12px 32px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-merge {
+      background: #667eea;
+      color: white;
+      box-shadow: 0 4px 14px rgba(102,126,234,0.3);
+    }
+    .btn-merge:hover { background: #5a6fd6; transform: translateY(-1px); }
+    .btn-merge:disabled {
+      background: #cbd5e1;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-clear {
+      background: white;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+    .btn-clear:hover { background: #f1f5f9; }
+
+    /* ====== Progress ====== */
+    .progress-wrap {
+      display: none;
+      text-align: center;
+      padding: 24px;
+    }
+    .progress-wrap.show { display: block; }
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 3px;
+      transition: width 0.3s;
+      width: 0%;
+    }
+    .progress-text { font-size: 13px; color: #64748b; }
+
+    /* ====== Result ====== */
+    .result-wrap {
+      display: none;
+      text-align: center;
+      padding: 24px;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+    .result-wrap.show { display: block; }
+    .result-icon { font-size: 48px; margin-bottom: 12px; }
+    .result-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .result-size { font-size: 13px; color: #64748b; margin-bottom: 16px; }
+    .btn-download {
+      display: inline-block;
+      padding: 12px 36px;
+      background: #10b981;
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 700;
+      box-shadow: 0 4px 14px rgba(16,185,129,0.3);
+    }
+    .btn-download:hover { background: #059669; }
+
+    /* ====== Limit upgrade notice ====== */
+    .limit-notice {
+      display: none;
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .limit-notice.show { display: block; }
+    .limit-notice a { color: #856404; font-weight: 700; }
+
+    /* ====== Preview ====== */
+    .preview-area {
+      background: white; border-radius: 12px; border: 1px solid #e2e8f0;
+      padding: 16px 20px; margin-bottom: 20px;
+    }
+    .preview-card {
+      flex-shrink: 0; width: 150px; text-align: center;
+      background: #f8fafc; border-radius: 8px; padding: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    .preview-card canvas {
+      width: 134px; height: 100px; object-fit: contain;
+      border-radius: 4px; margin-bottom: 6px;
+    }
+    .preview-card .pname {
+      font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .preview-card .pidx {
+      font-size: 10px; color: #94a3b8; margin-top: 2px;
+    }
+
+    /* ====== Footer ====== */
+    .footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: #94a3b8;
+      border-top: 1px solid #e2e8f0;
+      margin-top: 40px;
+    }
+
+    /* ====== License Modal ====== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+    .modal h3 { font-size: 20px; margin-bottom: 8px; }
+    .modal p { font-size: 14px; color: #64748b; margin-bottom: 16px; }
+    .modal input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: monospace;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .modal input:focus { outline: none; border-color: #667eea; }
+    .modal .modal-msg { font-size: 12px; margin-bottom: 12px; }
+    .modal .btn-row { display: flex; gap: 8px; }
+    .modal .btn-row .btn { flex: 1; font-size: 14px; padding: 10px; }
+    .btn-outline {
+      background: white;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+
+    @media (max-width: 600px) {
+      .main { padding: 20px 12px 40px; }
+      h1 { font-size: 22px; }
+      .header { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <a href="/" class="logo"><span class="icon">📄</span> PDFTools</a>
+    <div class="nav">
+      <a href="index.html" class="active">PDF合并</a>
+      <a href="compress-image.html">图片压缩</a>
+      <a href="convert-image.html">格式转换</a>
+      <a href="compress-pdf.html">PDF压缩</a>
+    </div>
+    <div class="header-right">
+      <span class="badge badge-free" id="tierBadge">免费版</span>
+      <span class="usage-hint" id="usageHint" style="font-size:11px;color:#64748b;margin-left:4px"></span>
+      <a class="btn-upgrade" id="upgradeBtn" href="#" target="_blank" title="升级专业版">👑 升级专业版</a>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <h1>PDF 合并工具</h1>
+    <p class="subtitle">将多个 PDF 文件合并为一个，支持拖拽排序</p>
+    <div class="privacy-note">🔒 所有处理均在浏览器本地完成，文件不上传服务器</div>
+
+    <!-- 免费版限制提示 -->
+    <div class="limit-notice" id="limitNotice">
+      ⚠️ 免费版最多合并 <strong>5 个文件</strong>。
+      <a href="#" id="limitUpgradeLink">升级专业版</a> 解锁无限文件
+    </div>
+
+    <!-- 拖拽区 -->
+    <div class="dropzone" id="dropzone">
+      <div class="dz-icon">📁</div>
+      <div class="dz-text">拖拽 PDF 文件到此处</div>
+      <div class="dz-hint">或点击选择文件 — 支持多个文件同时选择</div>
+    </div>
+    <input type="file" id="fileInput" accept=".pdf,application/pdf" multiple style="display:none">
+
+    <!-- 文件列表 -->
+    <div class="file-list" id="fileList" style="display:none">
+      <div class="file-list-header">
+        <span>📋 待合并文件（<span id="fileCount">0</span>个）</span>
+        <span style="font-size:12px;font-weight:400;color:#94a3b8">拖拽文件可调整顺序</span>
+      </div>
+      <div id="fileListBody"></div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="action-bar" id="actionBar" style="display:none">
+      <button class="btn btn-merge" id="mergeBtn">🔗 开始合并</button>
+      <button class="btn btn-secondary" id="previewBtn">👁 预览</button>
+      <button class="btn btn-clear" id="clearBtn">清空列表</button>
+    </div>
+
+    <!-- 预览区域 -->
+    <div class="preview-area" id="previewArea" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:14px;font-weight:700">📖 合并预览（每份PDF首页）</span>
+        <button class="btn-sm" id="closePreview" style="border:1px solid #e2e8f0;background:white;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:12px">关闭</button>
+      </div>
+      <div id="previewGrid" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:12px"></div>
+    </div>
+
+    <!-- 进度条 -->
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-text" id="progressText">正在合并 PDF...</div>
+    </div>
+
+    <!-- 结果 -->
+    <div class="result-wrap" id="resultWrap">
+      <div class="result-icon">✅</div>
+      <div class="result-title">合并完成！</div>
+      <div class="result-size" id="resultSize"></div>
+      <a class="btn-download" id="downloadBtn" href="#" download="merged.pdf">📥 下载合并后的 PDF</a>
+      <div style="margin-top:12px">
+        <button class="btn-sm" id="resetBtn">重新合并</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- License Modal -->
+  <div class="modal-overlay" id="licenseModal">
+    <div class="modal">
+      <h3>🔑 激活专业版</h3>
+      <p style="font-size:13px;color:#64748b;margin-bottom:12px">
+        1. 点下方按钮去<b>爱发电</b>赞助 ¥9.9<br>
+        2. 赞助后获取 <b>License Key</b><br>
+        3. 在下方输入 Key 激活
+      </p>
+      <input type="text" id="licenseInput" placeholder="PDF-XXXX-XXXX-XXXX">
+      <div class="modal-msg" id="modalMsg" style="display:none"></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" id="modalClose">取消</button>
+        <button class="btn btn-merge" id="modalActivate">激活</button>
+      </div>
+      <a class="btn btn-merge" id="buyLink" href="#" target="_blank" style="display:block;margin-top:12px;text-align:center;text-decoration:none;font-size:14px;">
+        💰 去爱发电赞助 ¥9.9
+      </a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    PDFTools © 2026 · 所有文件处理均在浏览器本地完成 · 您的文件永远不会离开您的设备
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

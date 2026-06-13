@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="免费在线PDF压缩工具，减小PDF文件大小。纯浏览器本地处理，文件不上传服务器。支持批量压缩。">
+  <meta name="keywords" content="PDF压缩,在线PDF压缩,免费PDF压缩,PDF体积减小,压缩PDF文件">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://pdftools-online.netlify.app/compress-pdf">
+  <meta property="og:title" content="PDF压缩 - 免费在线工具">
+  <meta property="og:description" content="免费在线PDF压缩，纯浏览器本地处理。">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <title>PDF压缩 - 免费 · 安全 · 无需上传 | PDFTools</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Roboto, sans-serif; background: #f8fafc; color: #334155; min-height: 100vh; }
+    .header { background: white; border-bottom: 1px solid #e2e8f0; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; gap: 8px; }
+    .logo { font-size: 20px; font-weight: 800; color: #0f172a; text-decoration: none; }
+    .nav { display: flex; gap: 4px; flex-wrap: wrap; }
+    .nav a { padding: 6px 14px; border-radius: 20px; font-size: 14px; font-weight: 600; text-decoration: none; color: #64748b; }
+    .nav a:hover { background: #f1f5f9; }
+    .nav a.active { background: #667eea; color: white; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .badge { font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+    .badge-pro { background: #d4edda; color: #155724; }
+    .badge-free { background: #fff3cd; color: #856404; }
+    .btn-upgrade { padding: 7px 16px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .main { max-width: 720px; margin: 0 auto; padding: 32px 20px 60px; }
+    h1 { font-size: 28px; font-weight: 800; text-align: center; margin-bottom: 8px; color: #0f172a; }
+    .subtitle { text-align: center; font-size: 14px; color: #64748b; margin-bottom: 28px; }
+    .privacy-note { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: #10b981; font-weight: 600; margin-bottom: 24px; }
+
+    .dropzone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 48px 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: white; margin-bottom: 20px; }
+    .dropzone:hover, .dropzone.drag-over { border-color: #667eea; background: #f0f2ff; }
+    .dropzone .dz-icon { font-size: 48px; margin-bottom: 12px; }
+    .dropzone .dz-text { font-size: 16px; font-weight: 600; }
+    .dropzone .dz-hint { font-size: 13px; color: #94a3b8; margin-top: 6px; }
+
+    .file-list { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 20px; }
+    .file-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #f8fafc; }
+    .file-item:last-child { border-bottom: none; }
+    .file-item .finfo { flex: 1; min-width: 0; }
+    .file-item .fname { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-item .fsize { font-size: 12px; color: #94a3b8; }
+    .file-item .saved { color: #10b981; font-weight: 700; }
+    .file-item .status { font-size: 12px; white-space: nowrap; }
+    .btn-sm { padding: 5px 14px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.15s; }
+    .btn-sm.del { color: #e74c3c; }
+    .btn-sm.del:hover { background: #ffeaea; border-color: #e74c3c; }
+    .btn-sm.dl { color: #10b981; border-color: #10b981; }
+    .btn-sm.dl:hover { background: #d4edda; }
+
+    .action-bar { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+    .btn { padding: 12px 28px; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .btn-primary { background: #667eea; color: white; box-shadow: 0 4px 14px rgba(102,126,234,0.3); }
+    .btn-primary:hover { transform: translateY(-1px); }
+    .btn-primary:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; transform: none; }
+    .btn-secondary { background: white; color: #64748b; border: 1px solid #e2e8f0; }
+
+    .limit-notice { display: none; background: #fff3cd; color: #856404; border: 1px solid #ffc107; border-radius: 8px; padding: 14px; text-align: center; font-size: 14px; margin-bottom: 16px; }
+    .limit-notice.show { display: block; }
+    .limit-notice a { color: #856404; font-weight: 700; }
+
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: white; border-radius: 16px; padding: 32px; max-width: 400px; width: 90%; text-align: center; }
+    .modal h3 { font-size: 20px; margin-bottom: 8px; }
+    .modal p { font-size: 13px; color: #64748b; margin-bottom: 12px; }
+    .modal input { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: monospace; text-align: center; margin-bottom: 12px; }
+    .modal .btn-row { display: flex; gap: 8px; }
+    .modal .btn-row .btn { flex: 1; font-size: 14px; padding: 10px; }
+    .modal .btn-outline { background: white; color: #64748b; border: 1px solid #e2e8f0; }
+    .modal-msg { font-size: 12px; margin-bottom: 12px; display: none; }
+
+    .footer { text-align: center; padding: 24px; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; margin-top: 40px; }
+    .progress-wrap { display: none; text-align: center; padding: 20px; }
+    .progress-wrap.show { display: block; }
+    .progress-text { font-size: 13px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="/" class="logo"><span class="icon">📄</span> PDFTools</a>
+    <div class="nav">
+      <a href="index.html">PDF合并</a>
+      <a href="compress-image.html">图片压缩</a>
+      <a href="convert-image.html">格式转换</a>
+      <a href="compress-pdf.html" class="active">PDF压缩</a>
+    </div>
+    <div class="header-right">
+      <span class="badge badge-free" id="tierBadge">免费版</span><span class="usage-hint" id="usageHint" style="font-size:11px;color:#64748b;margin-left:4px"></span>
+      <a class="btn-upgrade" id="upgradeBtn" href="#">👑 升级专业版</a>
+    </div>
+  </div>
+
+  <div class="main">
+    <h1>PDF 压缩工具</h1>
+    <p class="subtitle">减小 PDF 文件体积，去除冗余数据</p>
+    <div class="privacy-note">🔒 所有处理均在浏览器本地完成，文件不上传服务器</div>
+
+    <div class="limit-notice" id="limitNotice">
+      ⚠️ 免费版最多 <strong>3 个文件</strong>。<a href="#" id="limitUpgradeLink">升级专业版</a> 解锁无限
+    </div>
+
+    <div class="dropzone" id="dropzone">
+      <div class="dz-icon">🗜️</div>
+      <div class="dz-text">拖拽 PDF 文件到此处</div>
+      <div class="dz-hint">或点击选择 — 支持批量</div>
+    </div>
+    <input type="file" id="fileInput" accept=".pdf,application/pdf" multiple style="display:none">
+
+    <div class="file-list" id="fileList" style="display:none"></div>
+
+    <div class="action-bar" id="actionBar" style="display:none">
+      <button class="btn btn-primary" id="compressBtn">🗜️ 全部压缩</button>
+      <button class="btn btn-secondary" id="downloadAllBtn" style="display:none">📥 打包下载全部 ZIP</button>
+      <button class="btn btn-secondary" id="clearBtn">清空</button>
+    </div>
+
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-text" id="progressText"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="licenseModal">
+    <div class="modal">
+      <h3>🔑 激活专业版</h3>
+      <p>1. 去<b>爱发电</b>赞助 ¥9.9<br>2. 获取 License Key<br>3. 在下方输入激活</p>
+      <input type="text" id="licenseInput" placeholder="PDF-XXXX-XXXX-XXXX">
+      <div class="modal-msg" id="modalMsg"></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" id="modalClose">取消</button>
+        <button class="btn btn-primary" id="modalActivate">激活</button>
+      </div>
+      <a class="btn btn-primary" id="buyLink" href="#" target="_blank" style="display:block;margin-top:12px;text-decoration:none;font-size:14px;">💰 去爱发电赞助 ¥9.9</a>
+    </div>
+  </div>
+
+  <div class="footer">PDFTools © 2026 · 所有文件处理均在浏览器本地完成</div>
+
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script>
+    const AFDIAN_URL = 'https://ifdian.net/a/thd4682';
+    const SALT = 'pdftools2026';
+    const FREE_LIMIT = 3;
+    const items = [];
+
+    function djb2Hash(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h * 33) + s.charCodeAt(i)) >>> 0; return h >>> 0; }
+    function hashToChecksum(h) { const ch = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; let r = ''; for (let i = 0; i < 4; i++) { r += ch[h % ch.length]; h = Math.floor(h / ch.length); } return r; }
+    function validateKey(key) { const m = key.trim().toUpperCase().match(/^PDF-([A-Z0-9]{4})-([A-Z0-9]{4})-([A-Z0-9]{4})$/); if (!m) return false; return m[3] === hashToChecksum(djb2Hash(m[1] + m[2] + SALT)); }
+    function isPremium() { try { const d = JSON.parse(localStorage.getItem('pdf-tools-state') || '{}'); if (!(d.license && d.license.valid)) return false; if (!d.license.expiresAt) return true; return Date.now() < d.license.expiresAt; } catch (_) { return false; } }
+
+    function showLicenseModal() { document.getElementById('buyLink').href = AFDIAN_URL; document.getElementById('licenseModal').classList.add('show'); document.getElementById('modalMsg').style.display = 'none'; document.getElementById('licenseInput').value = ''; }
+    function hideLicenseModal() { document.getElementById('licenseModal').classList.remove('show'); }
+    function activateLicense() {
+      const input = document.getElementById('licenseInput').value.trim(), msg = document.getElementById('modalMsg');
+      if (!input) { msg.style.display = 'block'; msg.style.color = '#e74c3c'; msg.textContent = '请输入 License Key'; return; }
+      if (!validateKey(input)) { msg.style.display = 'block'; msg.style.color = '#e74c3c'; msg.textContent = '无效的 License Key'; return; }
+      try { const d = JSON.parse(localStorage.getItem('pdf-tools-state') || '{}'); d.license = { key: input, valid: true, expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 }; localStorage.setItem('pdf-tools-state', JSON.stringify(d)); } catch (_) {}
+      refreshUI(); hideLicenseModal();
+    }
+
+    function refreshUI() {
+      const prem = isPremium(), b = document.getElementById('tierBadge'), u = document.getElementById('upgradeBtn'), h = document.getElementById('usageHint');
+      if (prem) { b.textContent = '专业版 👑'; b.className = 'badge badge-pro'; u.style.display = 'none'; if (h) { try { const s = JSON.parse(localStorage.getItem('pdf-tools-state') || '{}'); if (s.license && s.license.expiresAt) h.textContent = '剩余 ' + Math.max(0, Math.ceil((s.license.expiresAt - Date.now()) / 86400000)) + ' 天'; } catch(_) {} } }
+      else { b.textContent = '免费版'; b.className = 'badge badge-free'; u.style.display = ''; if (h) h.textContent = `剩余 ${FREE_LIMIT - items.length} 个文件`; }
+      const n = document.getElementById('limitNotice');
+      if (!prem && items.length >= FREE_LIMIT) n.classList.add('show'); else n.classList.remove('show');
+    }
+
+    async function addFiles(fileList) {
+      for (const f of Array.from(fileList).filter(f => f.type === 'application/pdf')) {
+        if (items.length >= FREE_LIMIT && !isPremium()) { document.getElementById('limitNotice').classList.add('show'); break; }
+        if (items.some(x => x.name === f.name && x.size === f.size)) continue;
+        const buf = await f.arrayBuffer();
+        items.push({ file: f, name: f.name, size: f.size, pdfBytes: new Uint8Array(buf), compressed: null, compUrl: null });
+      }
+      renderList();
+    }
+
+    function removeItem(idx) { items.splice(idx, 1); renderList(); }
+
+    function renderList() {
+      const list = document.getElementById('fileList'), ab = document.getElementById('actionBar'), dz = document.getElementById('dropzone');
+      if (items.length === 0) { list.style.display = 'none'; ab.style.display = 'none'; dz.style.display = ''; list.innerHTML = ''; }
+      else {
+        dz.style.display = 'none'; ab.style.display = 'flex'; list.style.display = '';
+        list.innerHTML = items.map((x, i) => `
+          <div class="file-item">
+            <div class="finfo">
+              <div class="fname" title="${x.name}">${x.name}</div>
+              <div class="fsize">
+                ${(x.size/1024).toFixed(0)} KB
+                ${x.compressed ? `<span class="saved"> → ${(x.compressed.size/1024).toFixed(0)} KB (-${Math.round((1-x.compressed.size/x.size)*100)}%)</span>` : ''}
+              </div>
+            </div>
+            <span class="status">${x.compressed ? '✅' : ''}</span>
+            ${x.compressed ? `<button class="btn-sm dl" onclick="downloadOne(${i})">下载</button>` : ''}
+            <button class="btn-sm del" onclick="removeItem(${i})">✕</button>
+          </div>`).join('');
+      }
+      refreshUI();
+    }
+
+    function downloadOne(idx) {
+      const x = items[idx];
+      if (!x.compressed) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(x.compressed);
+      a.download = x.name.replace('.pdf', '-compressed.pdf');
+      a.click();
+    }
+
+    async function compressAll() {
+      const progress = document.getElementById('progressWrap'), text = document.getElementById('progressText');
+      progress.classList.add('show');
+      let errCount = 0;
+
+      for (let i = 0; i < items.length; i++) {
+        text.textContent = `正在压缩 ${i + 1}/${items.length}: ${items[i].name}`;
+        await new Promise(r => setTimeout(r, 50));
+        try {
+          const doc = await PDFLib.PDFDocument.load(items[i].pdfBytes, { ignoreEncryption: true });
+          doc.setTitle(''); doc.setAuthor(''); doc.setSubject(''); doc.setKeywords([]); doc.setProducer('PDFTools'); doc.setCreator('');
+          const bytes = await doc.save();
+          items[i].compressed = new Blob([bytes], { type: 'application/pdf' });
+        } catch (err) {
+          console.error('压缩失败:', items[i].name, err);
+          text.textContent = `失败: ${items[i].name} - ${err.message}`;
+          errCount++;
+          await new Promise(r => setTimeout(r, 1500));
+        }
+      }
+
+      const ok = items.length - errCount;
+      text.textContent = `压缩完成！成功 ${ok} 个${errCount > 0 ? `，失败 ${errCount} 个` : ''}`;
+      setTimeout(() => progress.classList.remove('show'), 2000);
+      document.getElementById('downloadAllBtn').style.display = ok > 0 ? '' : 'none';
+      renderList();
+    }
+
+    async function downloadAllZip() {
+      if (!window.JSZip) { alert('JSZip 加载失败，请刷新重试'); return; }
+      const zip = new JSZip(); let c = 0;
+      for (const x of items) {
+        if (x.compressed) { zip.file(x.name.replace('.pdf', '-compressed.pdf'), x.compressed); c++; }
+      }
+      if (!c) { alert(`请先压缩！当前 ${items.length} 个文件均未压缩`); return; }
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'compressed-pdfs.zip'; a.click();
+    }
+
+    function init() {
+      refreshUI();
+      const dz = document.getElementById('dropzone'), fi = document.getElementById('fileInput');
+      dz.addEventListener('click', () => fi.click());
+      fi.addEventListener('change', e => { addFiles(e.target.files); fi.value = ''; });
+      ['dragover','dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); if (ev === 'dragover') dz.classList.add('drag-over'); else dz.classList.remove('drag-over'); }));
+      dz.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+      document.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+      document.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); if (!dz.contains(e.target)) addFiles(e.dataTransfer.files); });
+
+      document.getElementById('compressBtn').addEventListener('click', compressAll);
+      document.getElementById('downloadAllBtn').addEventListener('click', downloadAllZip);
+      document.getElementById('clearBtn').addEventListener('click', () => { items.length = 0; document.getElementById('downloadAllBtn').style.display = 'none'; renderList(); });
+      document.getElementById('upgradeBtn').addEventListener('click', e => { e.preventDefault(); showLicenseModal(); });
+      document.getElementById('limitUpgradeLink').addEventListener('click', e => { e.preventDefault(); showLicenseModal(); });
+      document.getElementById('modalClose').addEventListener('click', hideLicenseModal);
+      document.getElementById('modalActivate').addEventListener('click', activateLicense);
+      document.getElementById('licenseInput').addEventListener('keydown', e => { if (e.key === 'Enter') activateLicense(); });
+      document.getElementById('licenseModal').addEventListener('click', e => { if (e.target === e.currentTarget) hideLicenseModal(); });
+    }
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
