@@ -445,38 +445,45 @@ async function showPreview() {
   const area = document.getElementById('previewArea');
   const grid = document.getElementById('previewGrid');
   area.style.display = 'block';
-  grid.innerHTML = '<span style="color:#64748b;font-size:13px">正在加载预览...</span>';
 
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.worker.min.js';
 
-  for (let i = 0; i < STATE.files.length; i++) {
+  // 先显示占位卡片
+  grid.innerHTML = STATE.files.map((f, i) => `
+    <div class="preview-card" id="pcard-${i}">
+      <div class="pcard-loading" style="width:134px;height:100px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;border-radius:4px;font-size:24px;margin-bottom:6px">⏳</div>
+      <div class="pname">${escapeHtml(f.name)}</div>
+      <div class="pidx">第 ${i + 1} 页合并</div>
+    </div>
+  `).join('');
+
+  // 并行渲染所有PDF首页
+  await Promise.all(STATE.files.map(async (f, i) => {
     try {
-      const pdf = await pdfjsLib.getDocument(STATE.files[i].pdfBytes).promise;
+      const pdf = await pdfjsLib.getDocument(f.pdfBytes).promise;
       const page = await pdf.getPage(1);
-      const scale = 0.3;
-      const vp = page.getViewport({ scale });
+      const vp = page.getViewport({ scale: 0.2 });
       const canvas = document.createElement('canvas');
       canvas.width = vp.width;
       canvas.height = vp.height;
       const ctx = canvas.getContext('2d');
       await page.render({ canvasContext: ctx, viewport: vp }).promise;
 
-      const card = document.createElement('div');
-      card.className = 'preview-card';
-      card.innerHTML = `<canvas></canvas><div class="pname">${escapeHtml(STATE.files[i].name)}</div><div class="pidx">第 ${i + 1} 页合并 · ${STATE.files[i].pages || '?'} 页</div>`;
-      card.querySelector('canvas').replaceWith(canvas);
-
-      // 替换第一个占位文字
-      if (i === 0) grid.innerHTML = '';
-      grid.appendChild(card);
+      const card = document.getElementById(`pcard-${i}`);
+      if (card) {
+        const placeholder = card.querySelector('.pcard-loading');
+        if (placeholder) placeholder.replaceWith(canvas);
+        const pidx = card.querySelector('.pidx');
+        if (pidx) pidx.textContent = `第 ${i + 1} 页合并 · ${f.pages || '?'} 页`;
+      }
     } catch (_) {
-      const card = document.createElement('div');
-      card.className = 'preview-card';
-      card.innerHTML = `<div style="width:134px;height:100px;background:#f1f5f9;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:6px">⚠️</div><div class="pname">${escapeHtml(STATE.files[i].name)}</div><div class="pidx">无法预览</div>`;
-      if (i === 0) grid.innerHTML = '';
-      grid.appendChild(card);
+      const card = document.getElementById(`pcard-${i}`);
+      if (card) {
+        const placeholder = card.querySelector('.pcard-loading');
+        if (placeholder) placeholder.outerHTML = '<div style="width:134px;height:100px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;border-radius:4px;font-size:24px;margin-bottom:6px">⚠️</div>';
+      }
     }
-  }
+  }));
 }
 
 function hidePreview() {
