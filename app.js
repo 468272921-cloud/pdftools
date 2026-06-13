@@ -460,26 +460,30 @@ function showPreview() {
   const grid = document.getElementById('previewGrid');
   area.style.display = 'block';
 
-  const colors = ['#667eea','#f59e0b','#10b981','#ef4444','#8b5cf6','#ec4899','#06b6d4','#f97316'];
   const totalPages = STATE.files.reduce((sum, f) => sum + (f.pages || 0), 0);
 
+  // 先渲染占位，再逐个替换为 base64 object
   grid.innerHTML = ''
     + '<div style="width:100%;text-align:center;margin-bottom:14px;font-size:13px;color:#64748b">'
     + '合并顺序确认 · 共 ' + STATE.files.length + ' 个文件 · 预计 ' + totalPages + ' 页'
     + '</div>'
-    + '<div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px">'
+    + '<div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;justify-content:center;flex-wrap:wrap">'
     + STATE.files.map((f, i) => {
         const sizeStr = f.size > 1024 * 1024
           ? (f.size / 1024 / 1024).toFixed(1) + ' MB'
           : (f.size / 1024).toFixed(0) + ' KB';
-        const bg = colors[i % colors.length];
+        // 转 base64
+        const bytes = new Uint8Array(f.pdfBytes);
+        let binary = '';
+        for (let j = 0; j < bytes.length; j++) {
+          binary += String.fromCharCode(bytes[j]);
+        }
+        const b64 = btoa(binary);
         return ''
-          + '<div class="preview-card" id="pcard-' + i + '" style="flex-shrink:0;min-width:150px">'
-          + '<div style="width:150px;height:100px;background:' + bg + ';border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;margin-bottom:8px">'
-          + '<div style="font-size:36px;font-weight:800">' + (i + 1) + '</div>'
-          + '<div style="font-size:11px">' + (f.pages || '?') + ' 页 · ' + sizeStr + '</div>'
-          + '</div>'
-          + '<div class="pname" style="font-size:12px;text-align:center" title="' + escapeHtml(f.name) + '">' + escapeHtml(f.name) + '</div>'
+          + '<div class="preview-card" id="pcard-' + i + '" style="flex-shrink:0;width:160px;text-align:center">'
+          + '<object data="data:application/pdf;base64,' + b64 + '#page=1&view=fitH" type="application/pdf" style="width:160px;height:200px;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:6px"></object>'
+          + '<div class="pname" style="font-size:12px" title="' + escapeHtml(f.name) + '">' + escapeHtml(f.name) + '</div>'
+          + '<div style="font-size:11px;color:#94a3b8;margin-top:2px">第 ' + (i + 1) + ' 位 · ' + (f.pages || '?') + ' 页 · ' + sizeStr + '</div>'
           + '</div>';
       }).join('')
     + '</div>';
