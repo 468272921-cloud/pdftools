@@ -1,7 +1,12 @@
 /**
  * PDF 合并工具 — 纯客户端，无后端
- * 依赖：pdf-lib (CDN)
+ * 依赖：pdf-lib、pdf.js (CDN)
  */
+
+// pdf.js worker 提前初始化
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.worker.min.js';
+}
 
 // ============ 配置 ============
 const FREE_LIMIT_FILES = 5;
@@ -233,16 +238,24 @@ function removeFile(idx) {
   renderFileList();
 }
 
+function refreshPreviewIfVisible() {
+  if (document.getElementById('previewArea').style.display === 'block') {
+    showPreview();
+  }
+}
+
 function moveUp(idx) {
   if (idx <= 0) return;
   [STATE.files[idx - 1], STATE.files[idx]] = [STATE.files[idx], STATE.files[idx - 1]];
   renderFileList();
+  refreshPreviewIfVisible();
 }
 
 function moveDown(idx) {
   if (idx >= STATE.files.length - 1) return;
   [STATE.files[idx], STATE.files[idx + 1]] = [STATE.files[idx + 1], STATE.files[idx]];
   renderFileList();
+  refreshPreviewIfVisible();
 }
 
 function clearFiles() {
@@ -395,6 +408,7 @@ function setupDragSort() {
       STATE.files.splice(targetIdx, 0, moved);
       STATE.dragIdx = targetIdx;
       renderFileList();
+      refreshPreviewIfVisible();
     }
   });
 }
@@ -445,10 +459,11 @@ async function showPreview() {
   const area = document.getElementById('previewArea');
   const grid = document.getElementById('previewGrid');
   area.style.display = 'block';
+  if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.worker.min.js';
+  }
 
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.worker.min.js';
-
-  // 先显示占位卡片
+  // 占位卡片
   grid.innerHTML = STATE.files.map((f, i) => `
     <div class="preview-card" id="pcard-${i}">
       <div class="pcard-loading" style="width:134px;height:100px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;border-radius:4px;font-size:24px;margin-bottom:6px">⏳</div>
