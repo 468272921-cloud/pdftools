@@ -454,51 +454,24 @@ function setupDropzone() {
 }
 
 // ============ 预览 ============
-async function showPreview() {
+function showPreview() {
   if (STATE.files.length === 0) return;
   const area = document.getElementById('previewArea');
   const grid = document.getElementById('previewGrid');
   area.style.display = 'block';
-  if (typeof pdfjsLib !== 'undefined') {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.worker.min.js';
-  }
 
-  // 占位卡片
-  grid.innerHTML = STATE.files.map((f, i) => `
-    <div class="preview-card" id="pcard-${i}">
-      <div class="pcard-loading" style="width:134px;height:100px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;border-radius:4px;font-size:24px;margin-bottom:6px">⏳</div>
-      <div class="pname">${escapeHtml(f.name)}</div>
-      <div class="pidx">第 ${i + 1} 页合并</div>
-    </div>
-  `).join('');
-
-  // 并行渲染所有PDF首页
-  await Promise.all(STATE.files.map(async (f, i) => {
-    try {
-      const pdf = await pdfjsLib.getDocument(f.pdfBytes).promise;
-      const page = await pdf.getPage(1);
-      const vp = page.getViewport({ scale: 0.2 });
-      const canvas = document.createElement('canvas');
-      canvas.width = vp.width;
-      canvas.height = vp.height;
-      const ctx = canvas.getContext('2d');
-      await page.render({ canvasContext: ctx, viewport: vp }).promise;
-
-      const card = document.getElementById(`pcard-${i}`);
-      if (card) {
-        const placeholder = card.querySelector('.pcard-loading');
-        if (placeholder) placeholder.replaceWith(canvas);
-        const pidx = card.querySelector('.pidx');
-        if (pidx) pidx.textContent = `第 ${i + 1} 页合并 · ${f.pages || '?'} 页`;
-      }
-    } catch (_) {
-      const card = document.getElementById(`pcard-${i}`);
-      if (card) {
-        const placeholder = card.querySelector('.pcard-loading');
-        if (placeholder) placeholder.outerHTML = '<div style="width:134px;height:100px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;border-radius:4px;font-size:24px;margin-bottom:6px">⚠️</div>';
-      }
-    }
-  }));
+  // 用浏览器内置PDF查看器（iframe + blob URL），比pdf.js快
+  grid.innerHTML = STATE.files.map((f, i) => {
+    const blob = new Blob([f.pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    return `
+      <div class="preview-card" id="pcard-${i}">
+        <iframe src="${url}#page=1&view=fitH" style="width:134px;height:100px;border:1px solid #e2e8f0;border-radius:4px;margin-bottom:6px;pointer-events:none" scrolling="no"></iframe>
+        <div class="pname">${escapeHtml(f.name)}</div>
+        <div class="pidx">第 ${i + 1} 页合并 · ${f.pages || '?'} 页</div>
+      </div>
+    `;
+  }).join('');
 }
 
 function hidePreview() {
