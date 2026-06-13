@@ -460,13 +460,12 @@ function showPreview() {
   const grid = document.getElementById('previewGrid');
   area.style.display = 'block';
 
-  // 用浏览器内置PDF查看器（iframe + blob URL），比pdf.js快
   grid.innerHTML = STATE.files.map((f, i) => {
     const blob = new Blob([f.pdfBytes], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     return `
       <div class="preview-card" id="pcard-${i}">
-        <iframe src="${url}#page=1&view=fitH" style="width:134px;height:100px;border:1px solid #e2e8f0;border-radius:4px;margin-bottom:6px;pointer-events:none" scrolling="no"></iframe>
+        <embed src="${url}#page=1&view=fitH" type="application/pdf" style="width:134px;height:100px;border:1px solid #e2e8f0;border-radius:4px;margin-bottom:6px">
         <div class="pname">${escapeHtml(f.name)}</div>
         <div class="pidx">第 ${i + 1} 页合并 · ${f.pages || '?'} 页</div>
       </div>
